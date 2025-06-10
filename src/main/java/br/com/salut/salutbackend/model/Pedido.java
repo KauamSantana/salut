@@ -3,6 +3,7 @@ package br.com.salut.salutbackend.model;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.math.BigDecimal;
 
 @Entity
 public class Pedido {
@@ -25,6 +26,13 @@ public class Pedido {
     private LocalDateTime dataDoPedido;
     private String condicoesDePagamento;
     private String status;
+    // Adicione este campo junto com os outros
+    private BigDecimal valorTotal;
+
+
+    // E adicione seus getters e setters
+    public BigDecimal getValorTotal() { return valorTotal; }
+    public void setValorTotal(BigDecimal valorTotal) { this.valorTotal = valorTotal; }
 
     // Getters e Setters manuais
     public Long getId() { return id; }
