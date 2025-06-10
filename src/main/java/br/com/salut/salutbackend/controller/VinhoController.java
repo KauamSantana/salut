@@ -7,6 +7,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Optional; // NOVO IMPORT
 
 @RestController
 @RequestMapping("/vinhos")
@@ -20,12 +21,15 @@ public class VinhoController {
         return vinhoRepository.save(vinho);
     }
 
+    // MÉTODO LISTAR ATUALIZADO PARA ACEITAR O FILTRO
     @GetMapping
-    public List<Vinho> listarVinhos() {
+    public List<Vinho> listarVinhos(@RequestParam Optional<String> tipo) {
+        if (tipo.isPresent()) {
+            return vinhoRepository.findByTipo(tipo.get());
+        }
         return vinhoRepository.findAll();
     }
 
-    // NOVO MÉTODO PARA ATUALIZAR UM VINHO
     @PutMapping("/{id}")
     public ResponseEntity<Vinho> atualizarVinho(@PathVariable Long id, @RequestBody Vinho detalhesVinho) {
         return vinhoRepository.findById(id)
@@ -34,19 +38,17 @@ public class VinhoController {
                     vinho.setSafra(detalhesVinho.getSafra());
                     vinho.setTipo(detalhesVinho.getTipo());
                     vinho.setPrecoUnitario(detalhesVinho.getPrecoUnitario());
-                    // Adicione outros campos que possam ser atualizados
                     Vinho vinhoAtualizado = vinhoRepository.save(vinho);
                     return ResponseEntity.ok(vinhoAtualizado);
                 }).orElse(ResponseEntity.notFound().build());
     }
 
-    // NOVO MÉTODO PARA DELETAR UM VINHO
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deletarVinho(@PathVariable Long id) {
         if (!vinhoRepository.existsById(id)) {
             return ResponseEntity.notFound().build();
         }
         vinhoRepository.deleteById(id);
-        return ResponseEntity.noContent().build(); // Retorna 204 No Content, sucesso sem corpo
+        return ResponseEntity.noContent().build();
     }
 }

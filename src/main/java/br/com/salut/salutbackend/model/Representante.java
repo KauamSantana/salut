@@ -9,6 +9,7 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority; // NO
 import org.springframework.security.core.userdetails.UserDetails;
 import java.util.Collection;
 import java.util.List;
+import java.math.BigDecimal;
 
 @Entity
 public class Representante implements UserDetails {
@@ -19,7 +20,12 @@ public class Representante implements UserDetails {
     private String nome;
     private String email;
     private String senha;
+    // Adicione este campo junto com os outros
+    private BigDecimal meta;
 
+    // E adicione seus getters e setters
+    public BigDecimal getMeta() { return meta; }
+    public void setMeta(BigDecimal meta) { this.meta = meta; }
     // Getters e Setters manuais ...
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }

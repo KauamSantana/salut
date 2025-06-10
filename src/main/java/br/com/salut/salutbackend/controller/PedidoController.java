@@ -31,26 +31,22 @@ public class PedidoController {
     @PostMapping
     @Transactional
     public ResponseEntity<Pedido> criarPedido(@RequestBody Pedido pedido) {
-        // Busca o cliente do banco para garantir que ele existe
         Cliente cliente = clienteRepository.findById(pedido.getCliente().getId())
                 .orElseThrow(() -> new RuntimeException("Cliente não encontrado"));
 
-        // Prepara o pedido
         pedido.setCliente(cliente);
         pedido.setDataDoPedido(LocalDateTime.now());
         pedido.setStatus("PENDENTE");
 
-        // Processa os itens do pedido, se existirem
         if (pedido.getItens() != null && !pedido.getItens().isEmpty()) {
             List<ItemPedido> itensProcessados = pedido.getItens().stream().map(item -> {
                 Vinho vinho = vinhoRepository.findById(item.getVinho().getId())
                         .orElseThrow(() -> new RuntimeException("Vinho não encontrado"));
                 item.setVinho(vinho);
-                // Supondo que Vinho tenha um preço. Se não, esta linha pode ser removida ou ajustada.
                 if (vinho.getPrecoUnitario() != null) {
                     item.setPrecoUnitario(vinho.getPrecoUnitario());
                 }
-                item.setPedido(pedido); // Associa o item ao pedido principal
+                item.setPedido(pedido);
                 return item;
             }).collect(Collectors.toList());
             pedido.setItens(itensProcessados);
@@ -61,10 +57,34 @@ public class PedidoController {
     }
 
     @GetMapping
-    public List<Pedido> listarPedidos(@RequestParam Optional<Long> clienteId) {
+    public List<Pedido> listarPedidos(
+            @RequestParam Optional<Long> clienteId,
+            @RequestParam Optional<String> status) {
+
         if (clienteId.isPresent()) {
             return pedidoRepository.findByClienteId(clienteId.get());
         }
+        if (status.isPresent()) {
+            return pedidoRepository.findByStatus(status.get());
+        }
         return pedidoRepository.findAll();
+    }
+
+    // NOVO MÉTODO PARA ATUALIZAR UM PEDIDO
+    @PutMapping("/{id}")
+    @Transactional
+    public ResponseEntity<Pedido> atualizarPedido(@PathVariable Long id, @RequestBody Pedido detalhesPedido) {
+        return pedidoRepository.findById(id)
+                .map(pedido -> {
+                    // Apenas o status e as condições de pagamento podem ser atualizados por este endpoint
+                    if (detalhesPedido.getStatus() != null) {
+                        pedido.setStatus(detalhesPedido.getStatus());
+                    }
+                    if (detalhesPedido.getCondicoesDePagamento() != null) {
+                        pedido.setCondicoesDePagamento(detalhesPedido.getCondicoesDePagamento());
+                    }
+                    Pedido pedidoAtualizado = pedidoRepository.save(pedido);
+                    return ResponseEntity.ok(pedidoAtualizado);
+                }).orElse(ResponseEntity.notFound().build());
     }
 }
