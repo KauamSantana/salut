@@ -11,6 +11,7 @@ import java.util.Collection;
 import java.util.List;
 import java.math.BigDecimal;
 
+
 @Entity
 public class Representante implements UserDetails {
 
@@ -22,7 +23,13 @@ public class Representante implements UserDetails {
     private String senha;
     // Adicione este campo junto com os outros
     private BigDecimal meta;
+    // Adicione este campo junto com os outros
+    private BigDecimal taxaComissao;
 
+
+    // E adicione seus getters e setters
+    public BigDecimal getTaxaComissao() { return taxaComissao; }
+    public void setTaxaComissao(BigDecimal taxaComissao) { this.taxaComissao = taxaComissao; }
     // E adicione seus getters e setters
     public BigDecimal getMeta() { return meta; }
     public void setMeta(BigDecimal meta) { this.meta = meta; }
