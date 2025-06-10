@@ -3,9 +3,8 @@ package br.com.salut.salutbackend.controller;
 import br.com.salut.salutbackend.model.Cliente;
 import br.com.salut.salutbackend.repository.ClienteRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity; // NOVO IMPORT
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.security.core.Authentication;
 
 import java.util.List;
 
@@ -26,24 +25,37 @@ public class ClienteController {
         return clienteRepository.findAll();
     }
 
-    // Modifique o método de busca por ID para ficar assim:
     @GetMapping("/{id}")
-    public ResponseEntity<Cliente> buscarClientePorId(@PathVariable Long id, Authentication authentication) {
-        // Nosso "olho mágico"
-        if (authentication != null && authentication.isAuthenticated()) {
-            System.out.println("==================================================");
-            System.out.println("TESTE DE AUTENTICAÇÃO: Usuário chegou no controller!");
-            System.out.println("Principal (Usuário): " + authentication.getName());
-            System.out.println("Permissões: " + authentication.getAuthorities());
-            System.out.println("==================================================");
-        } else {
-            System.out.println("==================================================");
-            System.out.println("TESTE DE AUTENTICAÇÃO: Requisição chegou SEM usuário autenticado.");
-            System.out.println("==================================================");
-        }
-
+    public ResponseEntity<Cliente> buscarClientePorId(@PathVariable Long id) {
         return clienteRepository.findById(id)
                 .map(cliente -> ResponseEntity.ok(cliente))
                 .orElse(ResponseEntity.notFound().build());
+    }
+
+    // NOVO MÉTODO PARA ATUALIZAR UM CLIENTE
+    @PutMapping("/{id}")
+    public ResponseEntity<Cliente> atualizarCliente(@PathVariable Long id, @RequestBody Cliente detalhesCliente) {
+        return clienteRepository.findById(id)
+                .map(cliente -> {
+                    cliente.setNome(detalhesCliente.getNome());
+                    cliente.setCnpjCpf(detalhesCliente.getCnpjCpf());
+                    cliente.setEndereco(detalhesCliente.getEndereco());
+                    cliente.setResponsavel(detalhesCliente.getResponsavel());
+                    cliente.setContatos(detalhesCliente.getContatos());
+                    cliente.setLatitude(detalhesCliente.getLatitude());
+                    cliente.setLongitude(detalhesCliente.getLongitude());
+                    Cliente clienteAtualizado = clienteRepository.save(cliente);
+                    return ResponseEntity.ok(clienteAtualizado);
+                }).orElse(ResponseEntity.notFound().build());
+    }
+
+    // NOVO MÉTODO PARA DELETAR UM CLIENTE
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deletarCliente(@PathVariable Long id) {
+        if (!clienteRepository.existsById(id)) {
+            return ResponseEntity.notFound().build();
+        }
+        clienteRepository.deleteById(id);
+        return ResponseEntity.noContent().build();
     }
 }

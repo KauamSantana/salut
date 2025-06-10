@@ -10,13 +10,11 @@ import br.com.salut.salutbackend.repository.VinhoRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @RestController
@@ -42,19 +40,31 @@ public class PedidoController {
         pedido.setDataDoPedido(LocalDateTime.now());
         pedido.setStatus("PENDENTE");
 
-        // Processa os itens do pedido
-        List<ItemPedido> itensProcessados = pedido.getItens().stream().map(item -> {
-            Vinho vinho = vinhoRepository.findById(item.getVinho().getId())
-                    .orElseThrow(() -> new RuntimeException("Vinho não encontrado"));
-            item.setVinho(vinho);
-            item.setPrecoUnitario(vinho.getPrecoUnitario()); // Supondo que Vinho tenha um preço
-            item.setPedido(pedido); // Associa o item ao pedido principal
-            return item;
-        }).collect(Collectors.toList());
-
-        pedido.setItens(itensProcessados);
+        // Processa os itens do pedido, se existirem
+        if (pedido.getItens() != null && !pedido.getItens().isEmpty()) {
+            List<ItemPedido> itensProcessados = pedido.getItens().stream().map(item -> {
+                Vinho vinho = vinhoRepository.findById(item.getVinho().getId())
+                        .orElseThrow(() -> new RuntimeException("Vinho não encontrado"));
+                item.setVinho(vinho);
+                // Supondo que Vinho tenha um preço. Se não, esta linha pode ser removida ou ajustada.
+                if (vinho.getPrecoUnitario() != null) {
+                    item.setPrecoUnitario(vinho.getPrecoUnitario());
+                }
+                item.setPedido(pedido); // Associa o item ao pedido principal
+                return item;
+            }).collect(Collectors.toList());
+            pedido.setItens(itensProcessados);
+        }
 
         Pedido pedidoSalvo = pedidoRepository.save(pedido);
         return ResponseEntity.ok(pedidoSalvo);
+    }
+
+    @GetMapping
+    public List<Pedido> listarPedidos(@RequestParam Optional<Long> clienteId) {
+        if (clienteId.isPresent()) {
+            return pedidoRepository.findByClienteId(clienteId.get());
+        }
+        return pedidoRepository.findAll();
     }
 }
