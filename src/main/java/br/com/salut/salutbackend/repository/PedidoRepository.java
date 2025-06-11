@@ -20,6 +20,13 @@ public interface PedidoRepository extends JpaRepository<Pedido, Long> {
     // MUDANÇA AQUI: de List para Page
     Page<Pedido> findByStatus(String status, Pageable pageable);
 
+    // NOVO MÉTODO PARA CONTAR PEDIDOS
+    long countByRepresentanteIdAndStatus(Long representanteId, String status);
+
+    // NOVO MÉTODO PARA CALCULAR VENDAS DO REPRESENTANTE EM UM PERÍODO
+    @Query("SELECT SUM(i.precoUnitario * i.quantidade) FROM Pedido p JOIN p.itens i WHERE p.representante.id = :representanteId AND p.dataDoPedido BETWEEN :inicio AND :fim")
+    BigDecimal calcularTotalVendasPorRepresentanteNoPeriodo(@Param("representanteId") Long representanteId, @Param("inicio") LocalDateTime inicio, @Param("fim") LocalDateTime fim);
+
     @Query("SELECT SUM(i.precoUnitario * i.quantidade) FROM Pedido p JOIN p.itens i WHERE p.cliente.id = :clienteId")
     BigDecimal calcularTotalVendasPorCliente(@Param("clienteId") Long clienteId);
 

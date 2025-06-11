@@ -3,6 +3,8 @@ package br.com.salut.salutbackend.repository;
 import br.com.salut.salutbackend.model.Visita;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
+import java.time.LocalDateTime; // NOVO IMPORT
+import java.util.Optional; // NOVO IMPORT
 
 import java.util.List;
 
@@ -14,4 +16,8 @@ public interface VisitaRepository extends JpaRepository<Visita, Long> {
 
     // Encontrar todas as visitas para um cliente específico
     List<Visita> findByClienteId(Long clienteId);
+
+    // NOVO MÉTODO PARA BUSCAR A PRÓXIMA VISITA
+    Optional<Visita> findTopByRepresentanteIdAndDataHoraAfterAndStatusOrderByDataHoraAsc(Long representanteId, LocalDateTime dataAtual, String status);
+
 }
