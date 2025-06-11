@@ -3,11 +3,12 @@ package br.com.salut.salutbackend.controller;
 import br.com.salut.salutbackend.model.Vinho;
 import br.com.salut.salutbackend.repository.VinhoRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-import java.util.Optional; // NOVO IMPORT
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/vinhos")
@@ -21,13 +22,13 @@ public class VinhoController {
         return vinhoRepository.save(vinho);
     }
 
-    // MÉTODO LISTAR ATUALIZADO PARA ACEITAR O FILTRO
+    // MÉTODO LISTAR ATUALIZADO PARA PAGINAÇÃO
     @GetMapping
-    public List<Vinho> listarVinhos(@RequestParam Optional<String> tipo) {
+    public Page<Vinho> listarVinhos(@RequestParam Optional<String> tipo, Pageable pageable) {
         if (tipo.isPresent()) {
-            return vinhoRepository.findByTipo(tipo.get());
+            return vinhoRepository.findByTipo(tipo.get(), pageable);
         }
-        return vinhoRepository.findAll();
+        return vinhoRepository.findAll(pageable);
     }
 
     @PutMapping("/{id}")

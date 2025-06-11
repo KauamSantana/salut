@@ -8,11 +8,12 @@ import br.com.salut.salutbackend.repository.ClienteRepository;
 import br.com.salut.salutbackend.repository.RepresentanteRepository;
 import br.com.salut.salutbackend.repository.VisitaRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
 import java.util.Optional;
 
 @RestController
@@ -42,18 +43,20 @@ public class VisitaController {
         return ResponseEntity.ok(visitaSalva);
     }
 
+    // MÉTODO LISTAR ATUALIZADO PARA PAGINAÇÃO
     @GetMapping
-    public List<Visita> listarVisitas(
+    public Page<Visita> listarVisitas(
             @RequestParam Optional<Long> clienteId,
-            @RequestParam Optional<Long> representanteId) {
+            @RequestParam Optional<Long> representanteId,
+            Pageable pageable) {
 
         if (clienteId.isPresent()) {
-            return visitaRepository.findByClienteId(clienteId.get());
+            return visitaRepository.findByClienteId(clienteId.get(), pageable);
         }
         if (representanteId.isPresent()) {
-            return visitaRepository.findByRepresentanteId(representanteId.get());
+            return visitaRepository.findByRepresentanteId(representanteId.get(), pageable);
         }
-        return visitaRepository.findAll();
+        return visitaRepository.findAll(pageable);
     }
 
     @PutMapping("/{id}")
