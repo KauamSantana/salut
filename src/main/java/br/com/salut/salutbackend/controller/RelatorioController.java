@@ -1,10 +1,11 @@
 package br.com.salut.salutbackend.controller;
 
+import br.com.salut.salutbackend.dto.VendasPorRegiaoDTO;
 import br.com.salut.salutbackend.model.Representante;
 import br.com.salut.salutbackend.repository.PedidoRepository;
 import br.com.salut.salutbackend.repository.RepresentanteRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.format.annotation.DateTimeFormat; // A LINHA QUE FALTAVA
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -14,7 +15,10 @@ import org.springframework.web.bind.annotation.RestController;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
+import java.time.YearMonth;
+import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/relatorios")
@@ -38,34 +42,52 @@ public class RelatorioController {
     }
 
     @GetMapping("/performance/por-representante")
-    public ResponseEntity<Map<String, Object>> getPerformancePorRepresentante(@RequestParam Long representanteId) {
+    public ResponseEntity<Map<String, Object>> getPerformancePorRepresentante(
+            @RequestParam Long representanteId,
+            @RequestParam Optional<Integer> ano,
+            @RequestParam Optional<Integer> mes) {
+
         Representante representante = representanteRepository.findById(representanteId)
                 .orElseThrow(() -> new RuntimeException("Representante não encontrado"));
 
-        BigDecimal totalVendido = pedidoRepository.calcularTotalVendasPorRepresentante(representanteId);
-        totalVendido = (totalVendido == null) ? BigDecimal.ZERO : totalVendido;
+        // Define o período de busca: o mês/ano passados, ou o mês/ano atual se nada for informado
+        YearMonth anoMes = YearMonth.now();
+        if (ano.isPresent() && mes.isPresent()) {
+            anoMes = YearMonth.of(ano.get(), mes.get());
+        }
+        LocalDateTime inicioDoPeriodo = anoMes.atDay(1).atStartOfDay();
+        LocalDateTime fimDoPeriodo = anoMes.atEndOfMonth().atTime(23, 59, 59);
 
-        BigDecimal meta = representante.getMeta() == null ? BigDecimal.ZERO : representante.getMeta();
-        BigDecimal taxaComissao = representante.getTaxaComissao() == null ? BigDecimal.ZERO : representante.getTaxaComissao();
+        // Calcula vendas no período
+        BigDecimal vendasNoPeriodo = pedidoRepository.calcularTotalVendasPorRepresentanteNoPeriodo(representanteId, inicioDoPeriodo, fimDoPeriodo);
+        vendasNoPeriodo = (vendasNoPeriodo == null) ? BigDecimal.ZERO : vendasNoPeriodo;
+
+        // Calcula comissão sobre o total geral de vendas
+        BigDecimal totalVendidoGeral = pedidoRepository.calcularTotalVendasPorRepresentante(representanteId);
+        totalVendidoGeral = (totalVendidoGeral == null) ? BigDecimal.ZERO : totalVendidoGeral;
+
+        BigDecimal meta = representante.getMeta() != null ? representante.getMeta() : BigDecimal.ZERO;
+        BigDecimal taxaComissao = representante.getTaxaComissao() != null ? representante.getTaxaComissao() : BigDecimal.ZERO;
         BigDecimal valorComissao = BigDecimal.ZERO;
         BigDecimal percentualAtingido = BigDecimal.ZERO;
 
         if (meta.compareTo(BigDecimal.ZERO) > 0) {
-            percentualAtingido = totalVendido.multiply(new BigDecimal("100")).divide(meta, 2, RoundingMode.HALF_UP);
+            percentualAtingido = vendasNoPeriodo.multiply(new BigDecimal("100")).divide(meta, 2, RoundingMode.HALF_UP);
         }
 
         if (taxaComissao.compareTo(BigDecimal.ZERO) > 0) {
-            valorComissao = totalVendido.multiply(taxaComissao.divide(new BigDecimal("100")));
+            valorComissao = totalVendidoGeral.multiply(taxaComissao.divide(new BigDecimal("100"), 2, RoundingMode.HALF_UP));
         }
 
         Map<String, Object> response = Map.of(
+                "periodo", anoMes.toString(),
                 "representanteId", representante.getId(),
                 "nomeRepresentante", representante.getNome(),
                 "meta", meta,
-                "totalVendido", totalVendido,
+                "totalVendidoNoPeriodo", vendasNoPeriodo,
                 "percentualAtingido", percentualAtingido + "%",
                 "taxaComissao", taxaComissao + "%",
-                "valorComissao", valorComissao
+                "valorComissaoTotal", valorComissao
         );
         return ResponseEntity.ok(response);
     }
@@ -84,5 +106,11 @@ public class RelatorioController {
                 "totalVendasNoPeriodo", totalVendas
         );
         return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/vendas/por-regiao")
+    public ResponseEntity<List<VendasPorRegiaoDTO>> getVendasPorRegiao() {
+        List<VendasPorRegiaoDTO> relatorio = pedidoRepository.findVendasPorRegiao();
+        return ResponseEntity.ok(relatorio);
     }
 }

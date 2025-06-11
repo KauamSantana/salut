@@ -44,13 +44,13 @@ public class DashboardService {
             percentualMetaMes = vendasNoMes.multiply(new BigDecimal("100")).divide(meta, 2, RoundingMode.HALF_UP);
         }
 
-        // 3. Calcular Comissão Total
+        // 3. Calcular Comissão Total (baseado em todas as vendas)
         BigDecimal totalVendidoGeral = pedidoRepository.calcularTotalVendasPorRepresentante(representanteId);
         totalVendidoGeral = (totalVendidoGeral == null) ? BigDecimal.ZERO : totalVendidoGeral;
         BigDecimal taxaComissao = representante.getTaxaComissao() != null ? representante.getTaxaComissao() : BigDecimal.ZERO;
         BigDecimal valorComissaoTotal = BigDecimal.ZERO;
         if (taxaComissao.compareTo(BigDecimal.ZERO) > 0) {
-            valorComissaoTotal = totalVendidoGeral.multiply(taxaComissao.divide(new BigDecimal("100")));
+            valorComissaoTotal = totalVendidoGeral.multiply(taxaComissao.divide(new BigDecimal("100"), 2, RoundingMode.HALF_UP));
         }
 
         // 4. Buscar Próxima Visita (Rota)
