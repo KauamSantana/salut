@@ -6,11 +6,11 @@ import br.com.salut.salutbackend.model.Representante;
 import br.com.salut.salutbackend.repository.ClienteRepository;
 import br.com.salut.salutbackend.repository.RepresentanteRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/clientes")
@@ -45,8 +45,8 @@ public class ClienteController {
     }
 
     @GetMapping
-    public List<Cliente> listarClientes() {
-        return clienteRepository.findAll();
+    public Page<Cliente> listarClientes(Pageable pageable) {
+        return clienteRepository.findAll(pageable);
     }
 
     @GetMapping("/{id}")
@@ -71,6 +71,12 @@ public class ClienteController {
                     cliente.setContatos(detalhesCliente.contatos());
                     cliente.setLatitude(detalhesCliente.latitude());
                     cliente.setLongitude(detalhesCliente.longitude());
+
+                    if (detalhesCliente.representanteId() != null) {
+                        Representante representante = representanteRepository.findById(detalhesCliente.representanteId())
+                                .orElseThrow(() -> new RuntimeException("Representante responsável não encontrado"));
+                        cliente.setRepresentante(representante);
+                    }
 
                     Cliente clienteAtualizado = clienteRepository.save(cliente);
                     return ResponseEntity.ok(clienteAtualizado);

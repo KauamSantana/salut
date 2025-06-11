@@ -1,12 +1,15 @@
 package br.com.salut.salutbackend.controller;
 
 import br.com.salut.salutbackend.dto.PedidoCadastroDTO;
+import br.com.salut.salutbackend.dto.PedidoUpdateDTO;
 import br.com.salut.salutbackend.model.*;
 import br.com.salut.salutbackend.repository.ClienteRepository;
 import br.com.salut.salutbackend.repository.PedidoRepository;
 import br.com.salut.salutbackend.repository.RepresentanteRepository;
 import br.com.salut.salutbackend.repository.VinhoRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
@@ -21,10 +24,14 @@ import java.util.stream.Collectors;
 @RequestMapping("/pedidos")
 public class PedidoController {
 
-    @Autowired private PedidoRepository pedidoRepository;
-    @Autowired private ClienteRepository clienteRepository;
-    @Autowired private VinhoRepository vinhoRepository;
-    @Autowired private RepresentanteRepository representanteRepository;
+    @Autowired
+    private PedidoRepository pedidoRepository;
+    @Autowired
+    private ClienteRepository clienteRepository;
+    @Autowired
+    private VinhoRepository vinhoRepository;
+    @Autowired
+    private RepresentanteRepository representanteRepository;
 
     @PostMapping
     @Transactional
@@ -64,26 +71,30 @@ public class PedidoController {
     }
 
     @GetMapping
-    public List<Pedido> listarPedidos(@RequestParam Optional<Long> clienteId, @RequestParam Optional<String> status) {
+    public Page<Pedido> listarPedidos(
+            @RequestParam Optional<Long> clienteId,
+            @RequestParam Optional<String> status,
+            Pageable pageable) {
+
         if (clienteId.isPresent()) {
-            return pedidoRepository.findByClienteId(clienteId.get());
+            return pedidoRepository.findByClienteId(clienteId.get(), pageable);
         }
         if (status.isPresent()) {
-            return pedidoRepository.findByStatus(status.get());
+            return pedidoRepository.findByStatus(status.get(), pageable);
         }
-        return pedidoRepository.findAll();
+        return pedidoRepository.findAll(pageable);
     }
 
     @PutMapping("/{id}")
     @Transactional
-    public ResponseEntity<Pedido> atualizarPedido(@PathVariable Long id, @RequestBody Pedido detalhesPedido) {
+    public ResponseEntity<Pedido> atualizarPedido(@PathVariable Long id, @RequestBody PedidoUpdateDTO detalhesPedido) {
         return pedidoRepository.findById(id)
                 .map(pedido -> {
-                    if (detalhesPedido.getStatus() != null) {
-                        pedido.setStatus(detalhesPedido.getStatus());
+                    if (detalhesPedido.status() != null) {
+                        pedido.setStatus(detalhesPedido.status());
                     }
-                    if (detalhesPedido.getCondicoesDePagamento() != null) {
-                        pedido.setCondicoesDePagamento(detalhesPedido.getCondicoesDePagamento());
+                    if (detalhesPedido.condicoesDePagamento() != null) {
+                        pedido.setCondicoesDePagamento(detalhesPedido.condicoesDePagamento());
                     }
                     Pedido pedidoAtualizado = pedidoRepository.save(pedido);
                     return ResponseEntity.ok(pedidoAtualizado);
