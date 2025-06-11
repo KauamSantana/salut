@@ -1,9 +1,7 @@
 package br.com.salut.salutbackend.model;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+import jakarta.persistence.*;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -19,17 +17,30 @@ public class Representante implements UserDetails {
     private Long id;
 
     private String nome;
-    private String sobrenome; // NOVO CAMPO
+    private String sobrenome;
     private String email;
-    private String telefone; // NOVO CAMPO
-    private String regiao; // NOVO CAMPO
-    private String status; // NOVO CAMPO
+    private String telefone;
+    private String regiao;
+    private String status;
     private String senha;
     private BigDecimal meta;
     private BigDecimal taxaComissao;
-    private String role; // NOVO CAMPO PARA DIFERENCIAR ADMIN/REPRESENTANTE
+    private String role;
 
-    // Getters e Setters ...
+    @OneToMany(mappedBy = "representante")
+    @JsonManagedReference("representante-clientes")
+    private List<Cliente> clientes;
+
+    @OneToMany(mappedBy = "representante")
+    @JsonManagedReference("representante-pedidos")
+    private List<Pedido> pedidos;
+
+    @OneToMany(mappedBy = "representante")
+    @JsonManagedReference("representante-visitas")
+    private List<Visita> visitas;
+
+
+    // Getters e Setters
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
     public String getNome() { return nome; }
@@ -52,11 +63,18 @@ public class Representante implements UserDetails {
     public void setTaxaComissao(BigDecimal taxaComissao) { this.taxaComissao = taxaComissao; }
     public String getRole() { return role; }
     public void setRole(String role) { this.role = role; }
+    public List<Cliente> getClientes() { return clientes; }
+    public void setClientes(List<Cliente> clientes) { this.clientes = clientes; }
+    public List<Pedido> getPedidos() { return pedidos; }
+    public void setPedidos(List<Pedido> pedidos) { this.pedidos = pedidos; }
+    public List<Visita> getVisitas() { return visitas; }
+    public void setVisitas(List<Visita> visitas) { this.visitas = visitas; }
+
 
     // Métodos UserDetails
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        // Agora a permissão é baseada no campo "role"
+        if (this.role == null) return List.of();
         return List.of(new SimpleGrantedAuthority("ROLE_" + this.role.toUpperCase()));
     }
     @Override

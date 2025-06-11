@@ -1,6 +1,9 @@
 package br.com.salut.salutbackend.model;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
+import java.util.List;
 
 @Entity
 public class Cliente {
@@ -10,22 +13,31 @@ public class Cliente {
     private Long id;
 
     private String nome;
-    private String sobrenome; // NOVO CAMPO
+    private String sobrenome;
     private String cnpjCpf;
-    private String email; // NOVO CAMPO
-    private String telefone; // NOVO CAMPO
+    private String email;
+    private String telefone;
     private String endereco;
     private String responsavel;
     private String contatos;
     private Double latitude;
     private Double longitude;
 
-    // NOVA RELAÇÃO: Muitos clientes para um representante
     @ManyToOne
     @JoinColumn(name = "representante_id")
+    @JsonBackReference("representante-clientes")
     private Representante representante;
 
-    // Getters e Setters ...
+    @OneToMany(mappedBy = "cliente")
+    @JsonManagedReference("cliente-pedidos")
+    private List<Pedido> pedidos;
+
+    @OneToMany(mappedBy = "cliente")
+    @JsonManagedReference("cliente-visitas")
+    private List<Visita> visitas;
+
+
+    // Getters e Setters
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
     public String getNome() { return nome; }
@@ -50,4 +62,8 @@ public class Cliente {
     public void setLongitude(Double longitude) { this.longitude = longitude; }
     public Representante getRepresentante() { return representante; }
     public void setRepresentante(Representante representante) { this.representante = representante; }
+    public List<Pedido> getPedidos() { return pedidos; }
+    public void setPedidos(List<Pedido> pedidos) { this.pedidos = pedidos; }
+    public List<Visita> getVisitas() { return visitas; }
+    public void setVisitas(List<Visita> visitas) { this.visitas = visitas; }
 }

@@ -1,5 +1,6 @@
 package br.com.salut.salutbackend.model;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
@@ -11,18 +12,18 @@ public class Visita {
     private Long id;
 
     private LocalDateTime dataHora;
-
-    private String status; // Ex: "AGENDADA", "REALIZADA", "CANCELADA"
-
+    private String status;
     @Column(columnDefinition = "TEXT")
     private String observacoes;
 
     @ManyToOne
     @JoinColumn(name = "cliente_id")
+    @JsonBackReference("cliente-visitas")
     private Cliente cliente;
 
     @ManyToOne
     @JoinColumn(name = "representante_id")
+    @JsonBackReference("representante-visitas")
     private Representante representante;
 
     // Getters e Setters

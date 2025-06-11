@@ -1,10 +1,12 @@
 package br.com.salut.salutbackend.controller;
 
+import br.com.salut.salutbackend.dto.RepresentanteCadastroDTO; // NOVO IMPORT
 import br.com.salut.salutbackend.model.Representante;
 import br.com.salut.salutbackend.repository.RepresentanteRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -20,10 +22,23 @@ public class RepresentanteController {
     private PasswordEncoder passwordEncoder;
 
     @PostMapping
-    public Representante criarRepresentante(@RequestBody Representante representante) {
-        // Criptografando a senha antes de salvar
-        representante.setSenha(passwordEncoder.encode(representante.getSenha()));
-        return representanteRepository.save(representante);
+    @Transactional
+    // MUDANÇA AQUI: Recebemos o DTO em vez da Entidade
+    public Representante criarRepresentante(@RequestBody RepresentanteCadastroDTO data) {
+        // Criamos uma nova entidade Representante e copiamos os dados do DTO para ela
+        Representante novoRepresentante = new Representante();
+        novoRepresentante.setNome(data.nome());
+        novoRepresentante.setSobrenome(data.sobrenome());
+        novoRepresentante.setEmail(data.email());
+        novoRepresentante.setTelefone(data.telefone());
+        novoRepresentante.setRegiao(data.regiao());
+        novoRepresentante.setStatus(data.status());
+        novoRepresentante.setSenha(passwordEncoder.encode(data.senha())); // Criptografando a senha
+        novoRepresentante.setMeta(data.meta());
+        novoRepresentante.setTaxaComissao(data.taxaComissao());
+        novoRepresentante.setRole(data.role() != null ? data.role() : "USER"); // Define USER como padrão
+
+        return representanteRepository.save(novoRepresentante);
     }
 
     @GetMapping
@@ -31,7 +46,6 @@ public class RepresentanteController {
         return representanteRepository.findAll();
     }
 
-    // NOVO MÉTODO PARA BUSCAR UM REPRESENTANTE POR ID
     @GetMapping("/{id}")
     public ResponseEntity<Representante> buscarRepresentantePorId(@PathVariable Long id) {
         return representanteRepository.findById(id)
@@ -39,25 +53,21 @@ public class RepresentanteController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    // NOVO MÉTODO PARA ATUALIZAR UM REPRESENTANTE
+    // O método de PUT também precisaria de um DTO, mas vamos focar no POST primeiro.
     @PutMapping("/{id}")
     public ResponseEntity<Representante> atualizarRepresentante(@PathVariable Long id, @RequestBody Representante detalhesRepresentante) {
         return representanteRepository.findById(id)
                 .map(representante -> {
                     representante.setNome(detalhesRepresentante.getNome());
                     representante.setEmail(detalhesRepresentante.getEmail());
-
-                    // Se uma nova senha for enviada, criptografa ela também
                     if (detalhesRepresentante.getSenha() != null && !detalhesRepresentante.getSenha().isEmpty()) {
                         representante.setSenha(passwordEncoder.encode(detalhesRepresentante.getSenha()));
                     }
-
                     Representante repAtualizado = representanteRepository.save(representante);
                     return ResponseEntity.ok(repAtualizado);
                 }).orElse(ResponseEntity.notFound().build());
     }
 
-    // NOVO MÉTODO PARA DELETAR UM REPRESENTANTE
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deletarRepresentante(@PathVariable Long id) {
         if (!representanteRepository.existsById(id)) {

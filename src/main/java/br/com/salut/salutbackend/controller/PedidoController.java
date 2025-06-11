@@ -1,5 +1,6 @@
 package br.com.salut.salutbackend.controller;
 
+import br.com.salut.salutbackend.dto.PedidoCadastroDTO;
 import br.com.salut.salutbackend.model.*;
 import br.com.salut.salutbackend.repository.ClienteRepository;
 import br.com.salut.salutbackend.repository.PedidoRepository;
@@ -14,68 +15,56 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/pedidos")
 public class PedidoController {
 
-    @Autowired
-    private PedidoRepository pedidoRepository;
-    @Autowired
-    private ClienteRepository clienteRepository;
-    @Autowired
-    private VinhoRepository vinhoRepository;
-    @Autowired
-    private RepresentanteRepository representanteRepository;
+    @Autowired private PedidoRepository pedidoRepository;
+    @Autowired private ClienteRepository clienteRepository;
+    @Autowired private VinhoRepository vinhoRepository;
+    @Autowired private RepresentanteRepository representanteRepository;
 
     @PostMapping
     @Transactional
-    public ResponseEntity<Pedido> criarPedido(@RequestBody Pedido pedido) {
-        Cliente cliente = clienteRepository.findById(pedido.getCliente().getId())
+    public ResponseEntity<Pedido> criarPedido(@RequestBody PedidoCadastroDTO data) {
+        Cliente cliente = clienteRepository.findById(data.clienteId())
                 .orElseThrow(() -> new RuntimeException("Cliente não encontrado"));
-        pedido.setCliente(cliente);
+        Representante representante = representanteRepository.findById(data.representanteId())
+                .orElseThrow(() -> new RuntimeException("Representante não encontrado"));
 
-        if (pedido.getRepresentante() != null && pedido.getRepresentante().getId() != null) {
-            Representante representante = representanteRepository.findById(pedido.getRepresentante().getId())
-                    .orElseThrow(() -> new RuntimeException("Representante não encontrado"));
-            pedido.setRepresentante(representante);
-        }
+        Pedido novoPedido = new Pedido();
+        novoPedido.setCliente(cliente);
+        novoPedido.setRepresentante(representante);
+        novoPedido.setDataDoPedido(LocalDateTime.now());
+        novoPedido.setCondicoesDePagamento(data.condicoesDePagamento());
+        novoPedido.setStatus("PENDENTE");
 
-        pedido.setDataDoPedido(LocalDateTime.now());
-        pedido.setStatus("PENDENTE");
+        List<ItemPedido> itens = data.itens().stream().map(itemDTO -> {
+            Vinho vinho = vinhoRepository.findById(itemDTO.vinhoId())
+                    .orElseThrow(() -> new RuntimeException("Vinho com ID " + itemDTO.vinhoId() + " não encontrado"));
+            ItemPedido itemPedido = new ItemPedido();
+            itemPedido.setVinho(vinho);
+            itemPedido.setQuantidade(itemDTO.quantidade());
+            itemPedido.setPrecoUnitario(vinho.getPrecoUnitario());
+            itemPedido.setPedido(novoPedido);
+            return itemPedido;
+        }).collect(Collectors.toList());
 
-        // LÓGICA CORRIGIDA:
-        // 1. Processa os itens primeiro
-        if (pedido.getItens() != null && !pedido.getItens().isEmpty()) {
-            pedido.getItens().forEach(item -> {
-                Vinho vinho = vinhoRepository.findById(item.getVinho().getId())
-                        .orElseThrow(() -> new RuntimeException("Vinho não encontrado"));
-                item.setVinho(vinho);
-                item.setPrecoUnitario(vinho.getPrecoUnitario() != null ? vinho.getPrecoUnitario() : BigDecimal.ZERO);
-                item.setPedido(pedido);
-            });
-        }
+        novoPedido.setItens(itens);
 
-        // 2. Agora, calcula o total a partir dos itens já processados
-        BigDecimal totalDoPedido = BigDecimal.ZERO;
-        if (pedido.getItens() != null) {
-            totalDoPedido = pedido.getItens().stream()
-                    .map(item -> item.getPrecoUnitario().multiply(new BigDecimal(item.getQuantidade())))
-                    .reduce(BigDecimal.ZERO, BigDecimal::add);
-        }
+        BigDecimal totalDoPedido = itens.stream()
+                .map(item -> item.getPrecoUnitario().multiply(new BigDecimal(item.getQuantidade())))
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        novoPedido.setValorTotal(totalDoPedido);
 
-        pedido.setValorTotal(totalDoPedido);
-
-        Pedido pedidoSalvo = pedidoRepository.save(pedido);
+        Pedido pedidoSalvo = pedidoRepository.save(novoPedido);
         return ResponseEntity.ok(pedidoSalvo);
     }
 
     @GetMapping
     public List<Pedido> listarPedidos(@RequestParam Optional<Long> clienteId, @RequestParam Optional<String> status) {
-        if (clienteId.isPresent() && status.isPresent()) {
-            // Esta é uma lógica que podemos adicionar depois para combinar filtros
-            return pedidoRepository.findByClienteId(clienteId.get()); // Simplificado por agora
-        }
         if (clienteId.isPresent()) {
             return pedidoRepository.findByClienteId(clienteId.get());
         }
