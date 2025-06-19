@@ -43,7 +43,6 @@ public class VisitaController {
         return ResponseEntity.ok(visitaSalva);
     }
 
-    // MÉTODO LISTAR ATUALIZADO PARA PAGINAÇÃO
     @GetMapping
     public Page<Visita> listarVisitas(
             @RequestParam Optional<Long> clienteId,
@@ -57,6 +56,13 @@ public class VisitaController {
             return visitaRepository.findByRepresentanteId(representanteId.get(), pageable);
         }
         return visitaRepository.findAll(pageable);
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<Visita> buscarVisitaPorId(@PathVariable Long id) {
+        return visitaRepository.findById(id)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
     }
 
     @PutMapping("/{id}")

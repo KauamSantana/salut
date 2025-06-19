@@ -22,13 +22,20 @@ public class VinhoController {
         return vinhoRepository.save(vinho);
     }
 
-    // MÉTODO LISTAR ATUALIZADO PARA PAGINAÇÃO
     @GetMapping
     public Page<Vinho> listarVinhos(@RequestParam Optional<String> tipo, Pageable pageable) {
         if (tipo.isPresent()) {
             return vinhoRepository.findByTipo(tipo.get(), pageable);
         }
         return vinhoRepository.findAll(pageable);
+    }
+
+    // Adicionando o GET por ID que estava faltando para o CRUD ficar completo
+    @GetMapping("/{id}")
+    public ResponseEntity<Vinho> buscarVinhoPorId(@PathVariable Long id) {
+        return vinhoRepository.findById(id)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
     }
 
     @PutMapping("/{id}")

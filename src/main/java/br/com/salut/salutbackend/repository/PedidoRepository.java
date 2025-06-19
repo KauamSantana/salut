@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+import br.com.salut.salutbackend.dto.VendasPorRegiaoDTO; // NOVO IMPORT
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -38,7 +39,7 @@ public interface PedidoRepository extends JpaRepository<Pedido, Long> {
     @Query("SELECT SUM(i.precoUnitario * i.quantidade) FROM Pedido p JOIN p.itens i WHERE p.dataDoPedido BETWEEN :dataInicio AND :dataFim")
     BigDecimal calcularTotalVendasPorPeriodo(@Param("dataInicio") LocalDateTime dataInicio, @Param("dataFim") LocalDateTime dataFim);
 
-    // NOVO MÉTODO PARA O RELATÓRIO
+    // NOVO MÉTODO PARA O RELATÓRIO POR REGIÃO
     @Query("SELECT new br.com.salut.salutbackend.dto.VendasPorRegiaoDTO(p.representante.regiao, SUM(i.precoUnitario * i.quantidade)) " +
             "FROM Pedido p JOIN p.itens i " +
             "WHERE p.representante.regiao IS NOT NULL " +

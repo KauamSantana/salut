@@ -50,19 +50,16 @@ public class RelatorioController {
         Representante representante = representanteRepository.findById(representanteId)
                 .orElseThrow(() -> new RuntimeException("Representante não encontrado"));
 
-        // Define o período de busca: o mês/ano passados, ou o mês/ano atual se nada for informado
-        YearMonth anoMes = YearMonth.now();
-        if (ano.isPresent() && mes.isPresent()) {
-            anoMes = YearMonth.of(ano.get(), mes.get());
-        }
+        YearMonth anoMes = (ano.isPresent() && mes.isPresent())
+                ? YearMonth.of(ano.get(), mes.get())
+                : YearMonth.now();
+
         LocalDateTime inicioDoPeriodo = anoMes.atDay(1).atStartOfDay();
         LocalDateTime fimDoPeriodo = anoMes.atEndOfMonth().atTime(23, 59, 59);
 
-        // Calcula vendas no período
         BigDecimal vendasNoPeriodo = pedidoRepository.calcularTotalVendasPorRepresentanteNoPeriodo(representanteId, inicioDoPeriodo, fimDoPeriodo);
         vendasNoPeriodo = (vendasNoPeriodo == null) ? BigDecimal.ZERO : vendasNoPeriodo;
 
-        // Calcula comissão sobre o total geral de vendas
         BigDecimal totalVendidoGeral = pedidoRepository.calcularTotalVendasPorRepresentante(representanteId);
         totalVendidoGeral = (totalVendidoGeral == null) ? BigDecimal.ZERO : totalVendidoGeral;
 

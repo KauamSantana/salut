@@ -39,7 +39,6 @@ public class RepresentanteController {
         return representanteRepository.save(novoRepresentante);
     }
 
-    // MÉTODO LISTAR ATUALIZADO PARA PAGINAÇÃO
     @GetMapping
     public Page<Representante> listarRepresentantes(Pageable pageable) {
         return representanteRepository.findAll(pageable);
@@ -53,14 +52,22 @@ public class RepresentanteController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Representante> atualizarRepresentante(@PathVariable Long id, @RequestBody Representante detalhesRepresentante) {
+    public ResponseEntity<Representante> atualizarRepresentante(@PathVariable Long id, @RequestBody RepresentanteCadastroDTO detalhesRepresentante) {
         return representanteRepository.findById(id)
                 .map(representante -> {
-                    representante.setNome(detalhesRepresentante.getNome());
-                    representante.setEmail(detalhesRepresentante.getEmail());
-                    if (detalhesRepresentante.getSenha() != null && !detalhesRepresentante.getSenha().isEmpty()) {
-                        representante.setSenha(passwordEncoder.encode(detalhesRepresentante.getSenha()));
+                    representante.setNome(detalhesRepresentante.nome());
+                    representante.setSobrenome(detalhesRepresentante.sobrenome());
+                    representante.setEmail(detalhesRepresentante.email());
+                    representante.setTelefone(detalhesRepresentante.telefone());
+                    representante.setRegiao(detalhesRepresentante.regiao());
+                    representante.setStatus(detalhesRepresentante.status());
+                    representante.setMeta(detalhesRepresentante.meta());
+                    representante.setTaxaComissao(detalhesRepresentante.taxaComissao());
+
+                    if (detalhesRepresentante.senha() != null && !detalhesRepresentante.senha().isEmpty()) {
+                        representante.setSenha(passwordEncoder.encode(detalhesRepresentante.senha()));
                     }
+
                     Representante repAtualizado = representanteRepository.save(representante);
                     return ResponseEntity.ok(repAtualizado);
                 }).orElse(ResponseEntity.notFound().build());

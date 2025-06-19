@@ -56,6 +56,8 @@ public class ClienteController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
+    // Dentro da classe ClienteController
+
     @PutMapping("/{id}")
     @Transactional
     public ResponseEntity<Cliente> atualizarCliente(@PathVariable Long id, @RequestBody ClienteCadastroDTO detalhesCliente) {
@@ -76,6 +78,8 @@ public class ClienteController {
                         Representante representante = representanteRepository.findById(detalhesCliente.representanteId())
                                 .orElseThrow(() -> new RuntimeException("Representante responsável não encontrado"));
                         cliente.setRepresentante(representante);
+                    } else {
+                        cliente.setRepresentante(null);
                     }
 
                     Cliente clienteAtualizado = clienteRepository.save(cliente);
