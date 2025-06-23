@@ -1,0 +1,9 @@
+POST http://localhost:8080/representantes
+Content-Type: application/json
+
+{
+  "nome": "Admin Salut",
+  "email": "admin@salut.com",
+  "senha": "admin123",
+  "role": "ADMIN"
+}

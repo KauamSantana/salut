@@ -7,6 +7,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
+
 @Entity
 public class Pedido {
 
@@ -16,12 +17,10 @@ public class Pedido {
 
     @ManyToOne
     @JoinColumn(name = "cliente_id")
-    @JsonBackReference("cliente-pedidos")
     private Cliente cliente;
 
     @ManyToOne
     @JoinColumn(name = "representante_id")
-    @JsonBackReference("representante-pedidos")
     private Representante representante;
 
     @OneToMany(mappedBy = "pedido", cascade = CascadeType.ALL)

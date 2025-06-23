@@ -56,11 +56,20 @@ public class RepresentanteController {
     public ResponseEntity<Representante> atualizarRepresentante(@PathVariable Long id, @RequestBody Representante detalhesRepresentante) {
         return representanteRepository.findById(id)
                 .map(representante -> {
+                    // Campos que já estavam
                     representante.setNome(detalhesRepresentante.getNome());
                     representante.setEmail(detalhesRepresentante.getEmail());
                     if (detalhesRepresentante.getSenha() != null && !detalhesRepresentante.getSenha().isEmpty()) {
                         representante.setSenha(passwordEncoder.encode(detalhesRepresentante.getSenha()));
                     }
+
+                    // ---> LINHAS QUE FALTAVAM <---
+                    representante.setSobrenome(detalhesRepresentante.getSobrenome());
+                    representante.setTelefone(detalhesRepresentante.getTelefone());
+                    representante.setRegiao(detalhesRepresentante.getRegiao());
+                    representante.setStatus(detalhesRepresentante.getStatus());
+                    // ---------------------------------
+
                     Representante repAtualizado = representanteRepository.save(representante);
                     return ResponseEntity.ok(repAtualizado);
                 }).orElse(ResponseEntity.notFound().build());

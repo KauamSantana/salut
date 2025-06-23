@@ -3,6 +3,7 @@ package br.com.salut.salutbackend.model;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 @Entity
 public class Visita {
@@ -18,12 +19,10 @@ public class Visita {
 
     @ManyToOne
     @JoinColumn(name = "cliente_id")
-    @JsonBackReference("cliente-visitas")
     private Cliente cliente;
 
     @ManyToOne
     @JoinColumn(name = "representante_id")
-    @JsonBackReference("representante-visitas")
     private Representante representante;
 
     // Getters e Setters

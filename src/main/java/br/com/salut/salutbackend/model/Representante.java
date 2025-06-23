@@ -8,6 +8,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import java.math.BigDecimal;
 import java.util.Collection;
 import java.util.List;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 @Entity
 public class Representante implements UserDetails {
@@ -28,15 +29,15 @@ public class Representante implements UserDetails {
     private String role;
 
     @OneToMany(mappedBy = "representante")
-    @JsonManagedReference("representante-clientes")
+    @JsonIgnore // <-- ADICIONE O @JsonIgnore AQUI
     private List<Cliente> clientes;
 
     @OneToMany(mappedBy = "representante")
-    @JsonManagedReference("representante-pedidos")
+    @JsonIgnore // <-- ADICIONE O @JsonIgnore AQUI
     private List<Pedido> pedidos;
 
     @OneToMany(mappedBy = "representante")
-    @JsonManagedReference("representante-visitas")
+    @JsonIgnore // <-- ADICIONE O @JsonIgnore AQUI
     private List<Visita> visitas;
 
 

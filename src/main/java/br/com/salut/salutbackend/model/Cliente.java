@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import java.util.List;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 @Entity
 public class Cliente {
@@ -25,15 +26,15 @@ public class Cliente {
 
     @ManyToOne
     @JoinColumn(name = "representante_id")
-    @JsonBackReference("representante-clientes")
+    @JsonIgnore // <-- ADICIONE O @JsonIgnore AQUI
     private Representante representante;
 
     @OneToMany(mappedBy = "cliente")
-    @JsonManagedReference("cliente-pedidos")
+    @JsonIgnore // <-- TROQUE A ANOTAÇÃO AQUI
     private List<Pedido> pedidos;
 
     @OneToMany(mappedBy = "cliente")
-    @JsonManagedReference("cliente-visitas")
+    @JsonIgnore // <-- TROQUE A ANOTAÇÃO AQUI
     private List<Visita> visitas;
 
 
