@@ -1,10 +1,11 @@
 package br.com.salut.salutbackend.controller;
 
+import br.com.salut.salutbackend.dto.VendasPorRegiaoDTO; // Adicionado
 import br.com.salut.salutbackend.model.Representante;
 import br.com.salut.salutbackend.repository.PedidoRepository;
 import br.com.salut.salutbackend.repository.RepresentanteRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.format.annotation.DateTimeFormat; // A LINHA QUE FALTAVA
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -14,6 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
+import java.util.List; // Adicionado
 import java.util.Map;
 
 @RestController
@@ -25,6 +27,14 @@ public class RelatorioController {
 
     @Autowired
     private RepresentanteRepository representanteRepository;
+
+    // --- O MÉTODO QUE FALTAVA ---
+    @GetMapping("/vendas/por-regiao")
+    public ResponseEntity<List<VendasPorRegiaoDTO>> getVendasPorRegiao() {
+        List<VendasPorRegiaoDTO> relatorio = pedidoRepository.findVendasPorRegiao();
+        return ResponseEntity.ok(relatorio);
+    }
+    // ----------------------------
 
     @GetMapping("/vendas/por-cliente")
     public ResponseEntity<Map<String, Object>> getVendasPorCliente(@RequestParam Long clienteId) {
